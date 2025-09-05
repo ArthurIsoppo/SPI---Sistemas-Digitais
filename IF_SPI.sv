@@ -24,14 +24,4 @@ modport SLAVE (
     output miso
 );
 
-always_ff @(posedge clock, negedge reset) begin
-    if (~reset) begin
-        sclk <= 1'b0;
-        mosi <= 1'b0;
-        nss <= 1'b1;
-    end else begin
-        $display(miso, mosi, sclk, nss);
-    end 
-end
-
 endinterface
