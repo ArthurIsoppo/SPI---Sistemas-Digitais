@@ -7,6 +7,7 @@ module Processor #(parameter REG_SIZE=10)(
     IF_SPI.MASTER spi
 );
 
+/*
 initial begin
     $srandom(3101); 
     
@@ -14,6 +15,7 @@ initial begin
         regbank[i] = $random;
     end
 end
+*/
 
 logic[1:0] opcode;
 logic[REG_SIZE-1:0] opa;
@@ -62,12 +64,10 @@ always_ff @(posedge clock, negedge reset) begin
     end else begin
         unique case (state)
             FETCH: begin
-                state <= next_state;
                 next_state <= EXECUTE;
             end
 
             EXECUTE: begin
-                state <= next_state;
                 data <= {opcode, regbank[opa], regbank[opb]};
                 addr <= res;
                 counter <= 0;
@@ -77,7 +77,6 @@ always_ff @(posedge clock, negedge reset) begin
             end
 
             SEND: begin
-                state <= next_state;
                 spi.mosi <= data[65 - counter];
                 counter <= counter + 1;
 
@@ -91,7 +90,6 @@ always_ff @(posedge clock, negedge reset) begin
             end
 
             WAIT: begin
-                state <= next_state;
                 if (counter == 0) begin
                         spi.nss <= 1'b0;
                 end
@@ -109,11 +107,24 @@ always_ff @(posedge clock, negedge reset) begin
             end
 
             SAVE: begin
-                state <= next_state;
-                regbank[addr] <= alu_result;
+                //regbank[addr] <= alu_result;
                 next_state <= FETCH;
             end
         endcase
+    end
+end
+
+always_ff @(posedge clock, negedge reset) begin
+    if(~reset) begin
+        $srandom(3101); 
+    
+        for (int i = 0; i < 2**REG_SIZE; i++) begin
+         regbank[i] = $random;
+        end
+    end else begin
+        if(state == SAVE) begin
+            regbank[addr] <= alu_result;
+        end
     end
 end
 
